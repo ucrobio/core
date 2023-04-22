@@ -6,9 +6,17 @@ func Test(title string, lines ...Fallible) Engine {
 	return (TestEngine{}).Initialize(title, lines)
 }
 
-func It(title string, lines ...Fallible) Engine { return Test(title, lines...) }
-func TestInline(line Fallible) Engine           { return Test("inline", line) }
-func Inline(line Fallible) Engine               { return TestInline(line) }
+func It(title string, lines ...Fallible) Engine {
+	return Test(title, lines...)
+}
+
+func TestInline(line Fallible) Engine {
+	return Test("inline", line)
+}
+
+func Inline(line Fallible) Engine {
+	return TestInline(line)
+}
 
 func BeforeAll(lines ...Callable) Engine {
 	return (BeforeAllHookEngine{}).Initialize(lines)
@@ -30,8 +38,13 @@ func Describe(title string, engines ...Engine) Engine {
 	return (ContextEngine{}).Initialize(title, engines)
 }
 
-func Context(title string, engines ...Engine) Engine { return Describe(title, engines...) }
-func When(title string, engines ...Engine) Engine    { return Describe(title, engines...) }
+func Context(title string, engines ...Engine) Engine {
+	return Describe(title, engines...)
+}
+
+func When(title string, engines ...Engine) Engine {
+	return Describe(title, engines...)
+}
 
 func Handle(name string, handler Handler, engines ...Engine) {
 	Describe(name, engines...).Context().Handle("handle", handler)
@@ -55,49 +68,10 @@ type (
 
 		Handle(title string, handler Handler)
 	}
-
-	BaseEngine struct {
-	}
-
-	TestEngine struct {
-		BaseEngine
-
-		Title string
-		Lines []Fallible
-	}
-
-	BaseHookEngine struct {
-		BaseEngine
-
-		Lines []Callable
-	}
-
-	BeforeAllHookEngine struct {
-		BaseHookEngine
-	}
-
-	BeforeEachHookEngine struct {
-		BaseHookEngine
-	}
-
-	DeferEachHookEngine struct {
-		BaseHookEngine
-	}
-
-	DeferAllHookEngine struct {
-		BaseHookEngine
-	}
-
-	ContextEngine struct {
-		BaseEngine
-
-		Title string
-
-		Hooks    []HookEngine
-		Tests    []TestEngine
-		Contexts []ContextEngine
-	}
 )
+
+type BaseEngine struct {
+}
 
 func (BaseEngine) IsTest() bool {
 	return false
@@ -121,6 +95,13 @@ func (BaseEngine) IsContext() bool {
 
 func (BaseEngine) Context() ContextEngine {
 	return ContextEngine{}
+}
+
+type TestEngine struct {
+	BaseEngine
+
+	Title string
+	Lines []Fallible
 }
 
 func (TestEngine) Initialize(title string, lines []Fallible) (ret TestEngine) {
@@ -155,6 +136,12 @@ func (it TestEngine) Handle(title string, handler Handler, hooks ...HookEngine) 
 	}
 }
 
+type BaseHookEngine struct {
+	BaseEngine
+
+	Lines []Callable
+}
+
 func (BaseHookEngine) Initialize(lines []Callable) (ret BaseHookEngine) {
 	ret.Lines = lines
 
@@ -183,6 +170,10 @@ func (it BaseHookEngine) Handle(title string, handler Handler) {
 	}
 }
 
+type BeforeAllHookEngine struct {
+	BaseHookEngine
+}
+
 func (BeforeAllHookEngine) Initialize(lines []Callable) (ret BeforeAllHookEngine) {
 	ret.BaseHookEngine = ret.BaseHookEngine.Initialize(lines)
 
@@ -203,6 +194,10 @@ func (it BeforeAllHookEngine) Hook() HookEngine {
 
 func (it BeforeAllHookEngine) Handle(title string, handler Handler) {
 	it.BaseHookEngine.Handle(fmt.Sprintf("%s: before all", title), handler)
+}
+
+type BeforeEachHookEngine struct {
+	BaseHookEngine
 }
 
 func (BeforeEachHookEngine) Initialize(lines []Callable) (ret BeforeEachHookEngine) {
@@ -227,6 +222,10 @@ func (it BeforeEachHookEngine) Handle(title string, handler Handler) {
 	it.BaseHookEngine.Handle(fmt.Sprintf("%s: before each", title), handler)
 }
 
+type DeferEachHookEngine struct {
+	BaseHookEngine
+}
+
 func (DeferEachHookEngine) Initialize(lines []Callable) (ret DeferEachHookEngine) {
 	ret.BaseHookEngine = ret.BaseHookEngine.Initialize(lines)
 
@@ -249,6 +248,10 @@ func (it DeferEachHookEngine) Handle(title string, handler Handler) {
 	it.BaseHookEngine.Handle(fmt.Sprintf("%s: defer each", title), handler)
 }
 
+type DeferAllHookEngine struct {
+	BaseHookEngine
+}
+
 func (DeferAllHookEngine) Initialize(lines []Callable) (ret DeferAllHookEngine) {
 	ret.BaseHookEngine = ret.BaseHookEngine.Initialize(lines)
 
@@ -269,6 +272,16 @@ func (it DeferAllHookEngine) Hook() HookEngine {
 
 func (it DeferAllHookEngine) Handle(title string, handler Handler) {
 	it.BaseHookEngine.Handle(fmt.Sprintf("%s: defer all", title), handler)
+}
+
+type ContextEngine struct {
+	BaseEngine
+
+	Title string
+
+	Hooks    []HookEngine
+	Tests    []TestEngine
+	Contexts []ContextEngine
 }
 
 func (ContextEngine) Initialize(title string, engines []Engine) (ret ContextEngine) {
