@@ -50,6 +50,24 @@ func Handle(name string, handler Handler, engines ...Engine) {
 	Describe(name, engines...).Context().Handle("handle", handler)
 }
 
+func Expect[T any](expected T, matcher NeutralMatcher[T]) error {
+	if matcher.Match(expected) {
+		return nil
+	}
+
+	return matcher.Error(expected)
+}
+
+func To[T any](matcher PositiveMatcher[T]) NeutralMatcher[T] {
+	return &PositiveMatcherCast[T]{matcher}
+}
+
+func NotTo[T any](matcher NegativeMatcher[T]) NeutralMatcher[T] {
+	return &NegativeMatcherCast[T]{matcher}
+}
+
+func BeEqual[T comparable](value T) *BeEqualMatcher[T] { return &BeEqualMatcher[T]{value} }
+
 type (
 	Engine interface {
 		IsHook() bool
@@ -379,4 +397,68 @@ func enriches(title string, err error) error {
 	}
 
 	return fmt.Errorf("%s: %w", title, err)
+}
+
+type PositiveMatcher[T any] interface {
+	PositiveMatch(expected T) bool
+	PositiveError(expected T) error
+}
+
+type NegativeMatcher[T any] interface {
+	NegativeMatch(expected T) bool
+	NegativeError(expected T) error
+}
+
+type Matcher[T any] interface {
+	PositiveMatcher[T]
+	NegativeMatcher[T]
+}
+
+type NeutralMatcher[T any] interface {
+	Match(expected T) bool
+	Error(expected T) error
+}
+
+type PositiveMatcherCast[T any] struct {
+	PositiveMatcher[T]
+}
+
+func (it PositiveMatcherCast[T]) Match(expected T) bool {
+	return it.PositiveMatch(expected)
+}
+
+func (it PositiveMatcherCast[T]) Error(expected T) error {
+	return it.PositiveError(expected)
+}
+
+type NegativeMatcherCast[T any] struct {
+	NegativeMatcher[T]
+}
+
+func (it NegativeMatcherCast[T]) Match(expected T) bool {
+	return it.NegativeMatch(expected)
+}
+
+func (it NegativeMatcherCast[T]) Error(expected T) error {
+	return it.NegativeError(expected)
+}
+
+type BeEqualMatcher[T comparable] struct {
+	Value T
+}
+
+func (it BeEqualMatcher[T]) PositiveMatch(expected T) bool {
+	return expected == it.Value
+}
+
+func (it BeEqualMatcher[T]) PositiveError(expected T) error {
+	return fmt.Errorf("should be equal: %v != %v", expected, it.Value)
+}
+
+func (it BeEqualMatcher[T]) NegativeMatch(expected T) bool {
+	return expected != it.Value
+}
+
+func (it BeEqualMatcher[T]) NegativeError(expected T) error {
+	return fmt.Errorf("shouldn't be equal: %v == %v", expected, it.Value)
 }
