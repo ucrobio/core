@@ -11,7 +11,7 @@ func It(title string, lines ...Fallible) Engine {
 }
 
 func TestInline(line Fallible) Engine {
-	return Test("inline", line)
+	return It("inline", line)
 }
 
 func Inline(line Fallible) Engine {
