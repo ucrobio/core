@@ -1,6 +1,9 @@
 package spec
 
-import "testing"
+import (
+	"fmt"
+	"testing"
+)
 
 func TestSpecUnitSuite(t *testing.T) {
 	Handle(
@@ -98,6 +101,24 @@ func TestSpecUnitSuite(t *testing.T) {
 			Inline(func() error { return Expect(When("title").IsHook(), To[bool](BeEqual(false))) }),
 			Inline(func() error { return Expect(When("title").IsTest(), To[bool](BeEqual(false))) }),
 			Inline(func() error { return Expect(When("title").Context().Title, To[string](BeEqual("title"))) }),
+		),
+
+		Describe(
+			"#Handle",
+
+			It(
+				"can catch errors",
+				func() error {
+					var err error
+					Handle(
+						"testing",
+						func(e error) { err = e },
+						Inline(func() error { return fmt.Errorf("error") }),
+					)
+
+					return Expect(err.Error(), To[string](BeEqual("handle: testing: error")))
+				},
+			),
 		),
 	)
 }
