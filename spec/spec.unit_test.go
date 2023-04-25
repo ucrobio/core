@@ -38,7 +38,7 @@ func TestSpecUnitSuite(t *testing.T) {
 		),
 
 		Describe(
-			"BeforeAll",
+			"#BeforeAll",
 
 			Inline(func() error { return Expect(BeforeAll().IsContext(), To[bool](BeEqual(false))) }),
 			Inline(func() error { return Expect(BeforeAll().IsHook(), To[bool](BeEqual(true))) }),
@@ -47,7 +47,7 @@ func TestSpecUnitSuite(t *testing.T) {
 		),
 
 		Describe(
-			"BeforeEach",
+			"#BeforeEach",
 
 			Inline(func() error { return Expect(BeforeEach().IsContext(), To[bool](BeEqual(false))) }),
 			Inline(func() error { return Expect(BeforeEach().IsHook(), To[bool](BeEqual(true))) }),
@@ -56,7 +56,7 @@ func TestSpecUnitSuite(t *testing.T) {
 		),
 
 		Describe(
-			"DeferEach",
+			"#DeferEach",
 
 			Inline(func() error { return Expect(DeferEach().IsContext(), To[bool](BeEqual(false))) }),
 			Inline(func() error { return Expect(DeferEach().IsHook(), To[bool](BeEqual(true))) }),
@@ -65,12 +65,39 @@ func TestSpecUnitSuite(t *testing.T) {
 		),
 
 		Describe(
-			"DeferAll",
+			"#DeferAll",
 
 			Inline(func() error { return Expect(DeferAll().IsContext(), To[bool](BeEqual(false))) }),
 			Inline(func() error { return Expect(DeferAll().IsHook(), To[bool](BeEqual(true))) }),
 			Inline(func() error { return Expect(DeferAll().IsTest(), To[bool](BeEqual(false))) }),
 			Inline(func() error { return Expect(DeferAll().Hook().IsDeferAllHookEngine(), To[bool](BeEqual(true))) }),
+		),
+
+		Describe(
+			"#Describe",
+
+			Inline(func() error { return Expect(Describe("title").IsContext(), To[bool](BeEqual(true))) }),
+			Inline(func() error { return Expect(Describe("title").IsHook(), To[bool](BeEqual(false))) }),
+			Inline(func() error { return Expect(Describe("title").IsTest(), To[bool](BeEqual(false))) }),
+			Inline(func() error { return Expect(Describe("title").Context().Title, To[string](BeEqual("title"))) }),
+		),
+
+		Describe(
+			"#Context",
+
+			Inline(func() error { return Expect(Context("title").IsContext(), To[bool](BeEqual(true))) }),
+			Inline(func() error { return Expect(Context("title").IsHook(), To[bool](BeEqual(false))) }),
+			Inline(func() error { return Expect(Context("title").IsTest(), To[bool](BeEqual(false))) }),
+			Inline(func() error { return Expect(Context("title").Context().Title, To[string](BeEqual("title"))) }),
+		),
+
+		Describe(
+			"#When",
+
+			Inline(func() error { return Expect(When("title").IsContext(), To[bool](BeEqual(true))) }),
+			Inline(func() error { return Expect(When("title").IsHook(), To[bool](BeEqual(false))) }),
+			Inline(func() error { return Expect(When("title").IsTest(), To[bool](BeEqual(false))) }),
+			Inline(func() error { return Expect(When("title").Context().Title, To[string](BeEqual("title"))) }),
 		),
 	)
 }
